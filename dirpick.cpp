@@ -11,14 +11,11 @@
 
 #include "stdinc.hpp"
 
-#include <menu.h>
+#include <cdk/cdk.h>
 
-const int
-  cmdSelect = MAX_COMMAND + 1,
-  cmdCancel = MAX_COMMAND + 2;
-
-//#undef NCURSES_MOUSE_VERSION
-typedef ITEM *ITEMPTR;
+#ifdef HAVE_XCURSES
+char *XCursesProgramName="dirpick";
+#endif
 
 void get_history(StrList& history, const char* cmdFifo, const char* listFifo)
 {
@@ -41,86 +38,36 @@ void get_history(StrList& history, const char* cmdFifo, const char* listFifo)
   }
 } // end get_history
 
-static int
-menu_virtualize(int c)
-{
-  if (c == '\n' || c == KEY_EXIT)
-    return cmdSelect;
-  else if (c == '\e')
-    return cmdCancel;
-  else if (c == 'u')
-    return (REQ_SCR_ULINE);
-  else if (c == 'd')
-    return (REQ_SCR_DLINE);
-  else if (c == 'b' || c == KEY_NPAGE)
-    return (REQ_SCR_UPAGE);
-  else if (c == 'f' || c == KEY_PPAGE)
-    return (REQ_SCR_DPAGE);
-  else if (c == 'n' || c == KEY_DOWN)
-    return (REQ_NEXT_ITEM);
-  else if (c == 'p' || c == KEY_UP)
-    return (REQ_PREV_ITEM);
-  else {
-//    if (c != KEY_MOUSE)
-//      beep();
-    return (c);
-  }
-}
-
-void dir_menu(StrList& history, String& choice)
+void dir_menu(CDKSCREEN* cdkscreen, StrList& history, String& choice)
 {
   choice.erase();
 
-  ITEMPTR* items = new ITEMPTR[history.size() + 1];
+  // Create the scrolling list:
+  int count = history.size();
+  const char** item = new const char*[count];
+  const char** d = item;
 
-#ifdef NCURSES_MOUSE_VERSION
-  mousemask(ALL_MOUSE_EVENTS, (mmask_t *) 0);
-#endif
+  for (SLConstItr s = history.begin(); s != history.end(); ++s, ++d)
+    *d = s->c_str();
 
-  ITEMPTR* ip = items;
-  for (SLConstItr s = history.begin(); s != history.end(); ++s)
-    *(ip++) = new_item(s->c_str(), "");
-  *ip = NULL;
+  CDKSCROLL *scrollList	= newCDKScroll(cdkscreen, CENTER, CENTER, RIGHT,
+                                       -1, -2, "<C></5>Directory History",
+                                       const_cast<char**>(item), count,
+                                       false, A_REVERSE, true, false);
+  if (!scrollList) return;
 
-  MENU* m = new_menu(items);
+  // Activate the scrolling list:
+  setCDKScrollCurrent(scrollList, count-1);
+//  setCDKScrollBackgroundColor(scrollList, "</5>");
+  int selection = activateCDKScroll(scrollList, 0);
 
-  int mrows, mcols;
-  set_menu_format(m, 10, 1);
-  scale_menu(m, &mrows, &mcols);
+  // Get the selected directory (if any):
+  if (scrollList->exitType == vNORMAL)
+    choice.assign(item[selection]);
 
-  WINDOW* menuwin = newwin(mrows + 2, mcols + 2, 2, 10);
-  set_menu_win(m, menuwin);
-  keypad(menuwin, TRUE);
-  box(menuwin, 0, 0);
-
-  set_menu_sub(m, derwin(menuwin, mrows, mcols, 1, 1));
-  set_current_item(m, ip[-1]);
-  post_menu(m);
-
-  for (;;) {
-    int cmd = menu_virtualize(wgetch(menuwin));
-    int result = menu_driver(m, cmd);
-
-    if (result == E_UNKNOWN_COMMAND) {
-      if (cmd != cmdCancel)
-        choice.assign(item_name(current_item(m)));
-      break;
-    }
-//    else if (result == E_REQUEST_DENIED)
-//      beep();
-  } // end forever
-
-  unpost_menu(m);
-  delwin(menuwin);
-
-  free_menu(m);
-  for (ip = items; *ip; ip++)
-    free_item(*ip);
-  delete[] items;
-
-#ifdef NCURSES_MOUSE_VERSION
-  mousemask(0, (mmask_t *) 0);
-#endif
+  // Clean up:
+  destroyCDKScroll(scrollList);
+  delete[] item;
 } // end dir_menu
 
 int main(int argc, char* argv[])
@@ -132,16 +79,26 @@ int main(int argc, char* argv[])
   get_history(history, argv[1], argv[2]);
   if (history.empty()) return(1);
 
+  /* Set up CDK. */
   SCREEN* screen = newterm(NULL, stderr, stdin);
   set_term(screen);
-  keypad(stdscr, TRUE);
-  nonl();
-  cbreak();
+//  keypad(stdscr, TRUE);
+//  nonl();
+//  cbreak();
+
+  WINDOW*     cursesWin = newwin(0,0,0,0);
+  CDKSCREEN*  cdkscreen = initCDKScreen(cursesWin);
+
+  /* Set up CDK Colors. */
+  initCDKColor();
+  use_default_colors();
 
   String choice;
-  dir_menu(history, choice);
+  dir_menu(cdkscreen, history, choice);
 
-  endwin();
+  destroyCDKScreen(cdkscreen);
+  delwin(cursesWin);
+  endCDK();
 
   if (!choice.empty()) {
     cout << choice << endl;
@@ -152,5 +109,5 @@ int main(int argc, char* argv[])
 
 // Local Variables:
 //  c-file-style: "cjm"
-//  compile-command: "g++ -o dirpick dirpick.cpp -lmenu -lncurses"
+//  compile-command: "g++ -o dirpick dirpick.cpp -lcdk -lncurses"
 // End:
