@@ -1,0 +1,7 @@
+#! /bin/bash
+# $Id$
+
+ln -fv cd.sh ~/apps/dirhistory/cd.sh
+ln -fv dirchange ~/apps/dirhistory/dirchange
+ln -fv dirhistoryd ~/apps/dirhistory/dirhistoryd
+ln -fv dirpick ~/apps/dirhistory/dirpick
