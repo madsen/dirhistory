@@ -4,7 +4,7 @@ function cd_with_history () {
   builtin cd "$@"
   local status=$?
 
-  /home/cjm/apps/dirhistory/dirchange /dev/shm/cjm-dirs ${OLDPWD} ${PWD}
+  /home/cjm/apps/dirhistory/dirchange /dev/shm/cjm-dirs "${OLDPWD}" "${PWD}"
 
   return ${status}
 } # end cd_with_history
@@ -12,7 +12,7 @@ function cd_with_history () {
 function cd_menu () {
   local dest=`/home/cjm/apps/dirhistory/dirpick /dev/shm/cjm-dirs /dev/shm/cjm-dir-list`
   if [ -d "${dest}" ]; then
-    cd_with_history ${dest}
+    cd_with_history "${dest}"
 #    echo "Now in ${PWD}"
 #    echo -en "\\033]0;Testing ${USER}@${HOSTNAME}:${PWD}(${dest})\\007"
   fi
