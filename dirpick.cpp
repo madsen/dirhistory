@@ -38,6 +38,31 @@ void get_history(StrList& history, const char* cmdFifo, const char* listFifo)
   }
 } // end get_history
 
+//--------------------------------------------------------------------
+static int myPreProcess(EObjectType cdkType GCC_UNUSED, void *object,
+                        void *clientData GCC_UNUSED, chtype input)
+{
+  chtype  newChar = 0;
+
+  switch (input) {
+   case 'p':
+   case 'P':
+   case CONTROL('P'):  newChar = KEY_UP;    break;
+
+   case 'n':
+   case 'N':
+   case CONTROL('N'):  newChar = KEY_DOWN;  break;
+  } // end switch input
+
+  if (newChar) {
+    injectCDKScroll(reinterpret_cast<CDKSCROLL*>(object), newChar);
+    return 0;
+  }
+
+  return 1;
+} // end myPreProcess
+
+//--------------------------------------------------------------------
 void dir_menu(CDKSCREEN* cdkscreen, StrList& history, String& choice)
 {
   choice.erase();
@@ -55,6 +80,7 @@ void dir_menu(CDKSCREEN* cdkscreen, StrList& history, String& choice)
                                        const_cast<char**>(item), count,
                                        false, A_REVERSE, true, false);
   if (!scrollList) return;
+  setCDKScrollPreProcess(scrollList, myPreProcess, 0);
 
   // Activate the scrolling list:
   setCDKScrollCurrent(scrollList, count-1);
@@ -70,6 +96,7 @@ void dir_menu(CDKSCREEN* cdkscreen, StrList& history, String& choice)
   delete[] item;
 } // end dir_menu
 
+//--------------------------------------------------------------------
 int main(int argc, char* argv[])
 {
   StrList history;
@@ -92,6 +119,7 @@ int main(int argc, char* argv[])
   /* Set up CDK Colors. */
   initCDKColor();
   use_default_colors();
+  curs_set(0);
 
   String choice;
   dir_menu(cdkscreen, history, choice);
