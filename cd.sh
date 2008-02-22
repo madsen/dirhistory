@@ -23,5 +23,9 @@ alias cd=cd_with_history
 #bind -x $'"\201":cd_menu'
 #bind '"\e[6;5~":'$'"\201"'
 
-bind '"\e[5;5~":'$'"\C-E \C-A\C-Kcd_menu\n\C-Y\b"'
-bind '"\e[6;5~":'$'"\C-E \C-A\C-Kcd_menu\n\C-Y\b"'
+if [ "$TERM" == "cygwin" ] ; then
+  bind '"\e[5~":'$'"\C-E \C-A\C-Kcd_menu\n\C-Y\b"'
+else
+  bind '"\e[5;5~":'$'"\C-E \C-A\C-Kcd_menu\n\C-Y\b"'
+  bind '"\e[6;5~":'$'"\C-E \C-A\C-Kcd_menu\n\C-Y\b"'
+fi
