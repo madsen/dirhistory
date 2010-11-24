@@ -1,5 +1,6 @@
 #! /bin/bash
-# $Id$
+#---------------------------------------------------------------------
+# Link the current versions into ~/apps/dirhistory/
 
 ln -fv cd.sh ~/apps/dirhistory/cd.sh
 ln -fv dirchange ~/apps/dirhistory/dirchange

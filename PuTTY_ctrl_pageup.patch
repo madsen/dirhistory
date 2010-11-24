@@ -1,0 +1,23 @@
+--- WINDOWS/WINDOW.C	Thu Jul 29 17:56:50 2004
++++ WINDOWS/WINDOW.C	Thu Oct 21 10:12:01 2004
+@@ -3411,16 +3411,16 @@
+ 	    return 0;
+ 	}
+ 	if (wParam == VK_PRIOR && shift_state == 2) {
+-	    SendMessage(hwnd, WM_VSCROLL, SB_LINEUP, 0);
+-	    return 0;
++        strcpy(output, "\x1B[5;5~");
++	    return 6;
+ 	}
+ 	if (wParam == VK_NEXT && shift_state == 1) {
+ 	    SendMessage(hwnd, WM_VSCROLL, SB_PAGEDOWN, 0);
+ 	    return 0;
+ 	}
+ 	if (wParam == VK_NEXT && shift_state == 2) {
+-	    SendMessage(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
+-	    return 0;
++        strcpy(output, "\x1B[6;5~");
++	    return 6;
+ 	}
+ 	if (wParam == VK_INSERT && shift_state == 1) {
+ 	    term_do_paste(term);
