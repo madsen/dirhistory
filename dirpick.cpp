@@ -83,7 +83,7 @@ void dir_menu(CDKSCREEN* cdkscreen, StrList& history, String& choice)
   setCDKScrollPreProcess(scrollList, myPreProcess, 0);
 
   // Activate the scrolling list:
-  setCDKScrollCurrent(scrollList, count-1);
+  setCDKScrollPosition(scrollList, count-1);
 //  setCDKScrollBackgroundColor(scrollList, "</5>");
   int selection = activateCDKScroll(scrollList, 0);
 
